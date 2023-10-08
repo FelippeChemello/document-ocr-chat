@@ -1,0 +1,8 @@
+@baseURL = http://localhost:3000
+
+POST {{baseURL}}/api/completion
+Content-Type: application/json
+
+{
+    "prompt": "The quick brown fox jumps over the lazy dog."
+}

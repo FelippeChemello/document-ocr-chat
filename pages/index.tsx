@@ -1,16 +1,21 @@
+"use client"
+
 import { NextPage } from 'next';
 import Head from 'next/head';
-import Image from 'next/image';
 import { useState } from 'react';
 import Dropzone from 'react-dropzone'
-import LoadingDots from '../components/LoadingDots';
-import { convertPDFToImage } from '../utils/convertPDFToImage';
-import { ocr } from '../utils/ocr';
+import LoadingDots from '@/components/LoadingDots';
+import { convertPDFToImage } from '@/utils/convertPDFToImage';
+import { ocr } from '@/utils/ocr';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
 
 const Home: NextPage = () => {
   const [images, setImages] = useState<Array<{image: string, text: string }> | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const {toast} = useToast();
 
   const runOCR = async (file: File) => {
     setLoading(true);
@@ -18,12 +23,19 @@ const Home: NextPage = () => {
     try {
       let images = [];
       if (file.type.includes('pdf')) {
+        toast({
+          title: 'Preparing PDF for OCR',
+        })
         const imageStrings = await convertPDFToImage(file)
         images.push(...imageStrings);
       } else {
         const imageString = URL.createObjectURL(file);
         images.push(imageString);
       }
+
+      toast({
+        title: 'Running OCR on your document',
+      })
 
       const ocrs = await ocr(images);
       setImages(images.map((image, index) => ({image, text: ocrs[index]})));
@@ -70,9 +82,37 @@ const Home: NextPage = () => {
       </Head>
 
       <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 mt-4 sm:mb-0 mb-8">
-        <h1 className="mx-auto max-w-4xl font-display text-4xl font-bold tracking-normal text-slate-900 sm:text-6xl mb-5">
-          Run OCR locally on PDFs and images
+        <h1 className="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
+          Run OCR on your documents
         </h1>
+        <h2 className="scroll-m-20 text-3xl font-semibold tracking-tight">
+          and chat with them
+        </h2>
+
+        <div className="flex space-x-2 justify-center mt-2">
+          {images && !loading && (
+            <>
+              <Button
+                onClick={() => {
+                  setImages(null);
+                  setImages(null);
+                  setError(null);
+                }}
+              >
+                Upload New Document
+              </Button>
+              <Button
+                onClick={() => {
+                  localStorage.setItem('ocr', JSON.stringify(images));
+                  window.location.href = '/chat';
+                }}
+                variant='secondary'
+              >
+                Chat with this document
+              </Button>
+            </>
+          )}
+        </div>
 
         <div className="flex justify-between items-center w-full flex-col mt-4">          
           {!images && !loading && (
@@ -91,7 +131,7 @@ const Home: NextPage = () => {
               <div key={index} className="w-full h-96 flex justify-between gap-4">
                 <img src={image.image} className="h-full object-contain flex-1" />
 
-                <textarea className="resize-none flex-1 w-full h-full text-gray-900 bg-gray-50 rounded-lg border border-gray-300" readOnly value={image.text} />
+                <Textarea className="resize-none flex-1 w-full h-full text-gray-900 bg-gray-50 rounded-lg border border-gray-300" readOnly value={image.text} />
               </div>
             ))}
           </div>
@@ -115,21 +155,6 @@ const Home: NextPage = () => {
               {error} 
             </div>
           )}
-
-          <div className="flex space-x-2 justify-center">
-            {images && !loading && (
-              <button
-                onClick={() => {
-                  setImages(null);
-                  setImages(null);
-                  setError(null);
-                }}
-                className="bg-black rounded-full text-white font-medium px-4 py-2 mt-8 hover:bg-black/80 transition"
-              >
-                Upload New Document
-              </button>
-            )}
-          </div>
         </div>
       </main>
     </div>

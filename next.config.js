@@ -1,9 +1,21 @@
 /** @type {import('next').NextConfig} */
 module.exports = {
   reactStrictMode: true,
-  images: {
-    domains: ["upcdn.io", "replicate.delivery", "lh3.googleusercontent.com"],
+  webpack: (config, context) => {
+    config.experiments = {
+      ...config.experiments,
+      topLevelAwait: true,
+      asyncWebAssembly: true,
+    };
+
+    config.module.rules.push({
+      test: /\.md$/i,
+      use: "raw-loader",
+    });
+
+    return config;
   },
+  transpilePackages: ["@visheratin/web-ai"],
   async redirects() {
     return [
       {
