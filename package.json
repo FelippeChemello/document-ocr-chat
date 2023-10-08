@@ -6,6 +6,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@edge-runtime/cookies": "^4.0.0",
     "@headlessui/react": "^1.7.7",
     "@hookform/resolvers": "^3.3.1",
     "@radix-ui/react-label": "^2.0.2",

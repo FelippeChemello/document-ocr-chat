@@ -5,6 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 dependencies:
+  '@edge-runtime/cookies':
+    specifier: ^4.0.0
+    version: 4.0.0
   '@headlessui/react':
     specifier: ^1.7.7
     version: 1.7.17(react-dom@18.2.0)(react@18.2.0)
@@ -156,6 +159,11 @@ packages:
       '@babel/helper-string-parser': 7.22.5
       '@babel/helper-validator-identifier': 7.22.20
       to-fast-properties: 2.0.0
+    dev: false
+
+  /@edge-runtime/cookies@4.0.0:
+    resolution: {integrity: sha512-PPgW/669apZqT3qUOa4JV0ctXQ7ayCNiklKXDD1z5fC7aemWrjpZ7r0Na7yQ96Fp673pNF5lzpfTJh26sWaGDg==}
+    engines: {node: '>=16'}
     dev: false
 
   /@headlessui/react@1.7.17(react-dom@18.2.0)(react@18.2.0):

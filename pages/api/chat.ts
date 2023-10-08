@@ -1,5 +1,3 @@
-import OpenAI from 'openai';
-import { FunctionCallPayload, OpenAIStream, streamToResponse } from 'ai';
 import { NextApiRequest, NextApiResponse } from "next";
 import { ChatCompletionRole } from 'openai/resources/chat';
 
@@ -9,40 +7,41 @@ export const config = {
     }
 }
 
-export default async function handler(
-    req: NextApiRequest,
-    res: NextApiResponse
-) {
-    const messages: Array<{ role: ChatCompletionRole, content: string, id: string }> = req.body.messages;
-    const fn = req.body.fn;
+export const runtime = 'edge'
 
-    const apiKey = req.cookies['openai-api-key'];
+export default async function handler(
+    req: Request,
+) {
+    const body = await req.json()
+    const messages: Array<{ role: ChatCompletionRole, content: string, id: string }> = body.messages;
+    const fn = body.fn
+
+    // @ts-ignore
+    const apiKey = req.cookies?.get('openai-api-key')?.value ?? undefined;
     if (!apiKey) {
-        res.status(401).json({ error: "Unauthorized" });
-        return;
+        return new Response('No API key provided', { status: 400 })
     }
 
     if (!messages) {
-        res.status(400).json({ error: "Messages not provided" });
-        return;
+        return new Response('No messages provided', { status: 400 })
     }
 
     const openAiMessages = messages.map(({ role, content }) => ({ role, content }))
 
-    const body = {
+    const openAiBody = {
         model: 'gpt-3.5-turbo-0613',
         messages: openAiMessages,
     }
 
     if (fn) {
         // @ts-ignore
-        body['functions'] = [{
+        openAiBody['functions'] = [{
             name: fn.name,
             description: fn.description,
             parameters: fn.parameters
         }]
         // @ts-ignore
-        body['function_call'] = {name: fn.name}
+        openAiBody['function_call'] = {name: fn.name}
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -51,7 +50,7 @@ export default async function handler(
             Authorization: `Bearer ${apiKey}`,
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify(body)
+        body: JSON.stringify(openAiBody)
     })
 
     if (response.status === 200) {
@@ -59,14 +58,16 @@ export default async function handler(
             const r = data.choices[0]
             console.log(r)
             if (r.message.function_call) {
-                return res.status(200).json({ text: r.message.function_call.arguments })
+                return new Response(r.message.function_call.arguments, { status: 200 })
             }
 
-            res.status(200).json(r.message.content);
+            return new Response(r.message.content, { status: 200 })
         }).catch((err) => {
-            res.status(500).json({ error: err });
+            console.log(err)
+            return new Response('Error parsing response', { status: 500 })
         })
     }
 
-    res.status(response.status).json({ error: response.statusText });
+    console.log(response)
+    return new Response('Error', { status: 500 })
 }
