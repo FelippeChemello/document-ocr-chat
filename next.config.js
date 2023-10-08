@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 module.exports = {
   reactStrictMode: true,
-  webpack: (config, context) => {
+  webpack: (config, { isServer }) => {
     config.experiments = {
       ...config.experiments,
       topLevelAwait: true,
@@ -12,6 +12,12 @@ module.exports = {
       test: /\.md$/i,
       use: "raw-loader",
     });
+
+    if (isServer) {
+      config.output.webassemblyModuleFilename = './../static/wasm/[modulehash].wasm';
+    } else {
+      config.output.webassemblyModuleFilename = 'static/wasm/[modulehash].wasm';
+    }
 
     return config;
   },
