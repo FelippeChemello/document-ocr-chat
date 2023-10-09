@@ -21,7 +21,10 @@ const convertURLStringToCanvas = async (url: string) => {
 }
 
 export const ocr = async (images: Array<string>) => {
-    const worker = await Tesseract.createWorker('eng')
+    const worker = await Tesseract.createWorker('por')
+    await worker.setParameters({
+        preserve_interword_spaces: '1'
+    })
     
     const texts = [];
     for (const image of images) {
